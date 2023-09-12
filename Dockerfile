@@ -1,9 +1,13 @@
 FROM alpine:edge
 
-ARG AUUID="d06ad199-8e70-4910-b6a3-1dbac9078d1a"
+ARG AUUID
 ARG CADDYIndexPage="https://github.com/AYJCSGM/mikutap/archive/master.zip"
 ARG ParameterSSENCYPT="chacha20-ietf-poly1305"
 ARG PORT=8080
+ARG PUUID
+
+ENV AUUID=${AUUID:-d06ad199-8e70-4910-b6a3-1dbac9078d1a}
+ENV PUUID=${AUUID:0:10}
 
 ADD etc/Caddyfile /tmp/Caddyfile
 ADD etc/xray.json /tmp/xray.json
@@ -19,7 +23,7 @@ RUN apk update && \
     mkdir -p /etc/caddy/ /usr/share/caddy && echo -e "User-agent: *\nDisallow: /" >/usr/share/caddy/robots.txt && \
     wget $CADDYIndexPage -O /usr/share/caddy/index.html && unzip -qo /usr/share/caddy/index.html -d /usr/share/caddy/ && mv /usr/share/caddy/*/* /usr/share/caddy/ 
 RUN cat /tmp/Caddyfile | sed -e "1c :$PORT" -e "s/\$AUUID/$AUUID/g" -e "s/\$MYUUID-HASH/$(caddy hash-password --plaintext $AUUID)/g" >/etc/caddy/Caddyfile 
-RUN cat /tmp/xray.json | sed -e "s/\$AUUID/$AUUID/g" -e "s/\$ParameterSSENCYPT/$ParameterSSENCYPT/g" >/xray.json
+RUN cat /tmp/xray.json | sed -e "s/\$AUUID/$AUUID/g" -e"s/\$PUUID/$PUUID/g" -e "s/\$ParameterSSENCYPT/$ParameterSSENCYPT/g" >/xray.json
 
 RUN chmod +x /start.sh
 
